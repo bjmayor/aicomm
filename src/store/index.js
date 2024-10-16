@@ -10,6 +10,7 @@ export default createStore({
     workspace: {}, // Current workspace
     channels: [], // List of channels
     messages: {}, // Messages hashmap, keyed by channel ID
+    users: {}, // users hashmap under workspace, keyed by user ID
   },
   mutations: {
     setUser(state, user) {
@@ -24,6 +25,10 @@ export default createStore({
     setChannels(state, channels) {
       state.channels = channels;
     },
+    setUsers(state, users) {
+      state.users = users;
+    },
+
     setMessages(state, messages) {
       state.messages = messages;
     },
@@ -44,6 +49,7 @@ export default createStore({
       const storedWorkspace = localStorage.getItem("workspace");
       const storedChannels = localStorage.getItem("channels");
       const storedMessages = localStorage.getItem("messages");
+      const storedUsers = localStorage.getItem("users");
 
       if (storedUser) {
         state.user = JSON.parse(storedUser);
@@ -60,6 +66,9 @@ export default createStore({
       if (storedMessages) {
         state.messages = JSON.parse(storedMessages);
       }
+      if (storedUsers) {
+        state.users = JSON.parse(storedUsers);
+      }
     },
   },
   actions: {
@@ -72,7 +81,7 @@ export default createStore({
           workspace,
         });
 
-        const user = saveUser(response, commit);
+        const user = await loadState(response, commit);
 
         return user;
       } catch (error) {
@@ -87,7 +96,7 @@ export default createStore({
           password,
         });
 
-        const user = saveUser(response, commit);
+        const user = await loadState(response, commit);
         return user;
       } catch (error) {
         console.error("Login failed:", error);
@@ -136,7 +145,21 @@ export default createStore({
       return state.workspace;
     },
     getChannels(state) {
-      return state.channels;
+      // filter out channels that type == 'single'
+      return state.channels.filter((channel) => channel.type !== "single");
+    },
+    getSingleChannels(state) {
+      const channels = state.channels.filter(
+        (channel) => channel.type == "single"
+      );
+      // return channel member that is not myself
+      return channels.map((channel) => {
+        const id = channel.members.filter(
+          (member) => member !== state.user.id
+        )[0];
+        channel.recipient = state.users[id];
+        return channel;
+      });
     },
     getChannelMessages: (state) => (channelId) => {
       return state.messages[channelId] || [];
@@ -144,19 +167,47 @@ export default createStore({
   },
 });
 
-function saveUser(response, commit) {
+async function loadState(response, commit) {
   const token = response.data.token;
   const user = jwtDecode(token); // Decode the JWT to get user info
   const workspace = { id: user.wsId, name: user.wsName };
 
-  // Store user info, token, and workspace in localStorage
-  localStorage.setItem("user", JSON.stringify(user));
-  localStorage.setItem("token", token);
-  localStorage.setItem("workspace", JSON.stringify(workspace));
+  try {
+    // fetch all workspace users
+    const userResp = await axios.get(`${getUrlBase()}/users`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const users = userResp.data;
+    const usersMap = {};
+    users.forEach((user) => {
+      usersMap[user.id] = user;
+    });
+    // fetch all my channels
+    const chatsResp = await axios.get(`${getUrlBase()}/chats`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const channels = chatsResp.data;
+    // Store user info, token, and workspace in localStorage
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("token", token);
+    localStorage.setItem("workspace", JSON.stringify(workspace));
+    localStorage.setItem("users", JSON.stringify(usersMap));
+    localStorage.setItem("channels", JSON.stringify(channels));
 
-  // Commit the mutations to update the state
-  commit("setUser", user);
-  commit("setToken", token);
-  commit("setWorkspace", workspace);
+    // Commit the mutations to update the state
+    commit("setUser", user);
+    commit("setToken", token);
+    commit("setWorkspace", workspace);
+    commit("setChannels", channels);
+    commit("setUsers", usersMap);
+    return user;
+  } catch (error) {
+    console.error("Failed to fetch channels:", error);
+  }
+
   return user;
 }
