@@ -11,6 +11,7 @@ export default createStore({
     channels: [], // List of channels
     messages: {}, // Messages hashmap, keyed by channel ID
     users: {}, // users hashmap under workspace, keyed by user ID
+    activeChannel: null,
   },
   mutations: {
     setUser(state, user) {
@@ -29,8 +30,12 @@ export default createStore({
       state.users = users;
     },
 
-    setMessages(state, messages) {
-      state.messages = messages;
+    setMessages(state, { channelId, messages }) {
+      state.messages[channelId] = messages;
+    },
+    setActiveChannel(state, channelId) {
+      const channel = state.channels.find((c) => c.id === channelId);
+      state.activeChannel = channel;
     },
     addChannel(state, channel) {
       state.channels.push(channel);
@@ -43,6 +48,7 @@ export default createStore({
         state.messages[channelId] = [message];
       }
     },
+
     loadUserState(state) {
       const storedUser = localStorage.getItem("user");
       const storedToken = localStorage.getItem("token");
@@ -117,6 +123,9 @@ export default createStore({
       commit("setChannels", []);
       commit("setMessages", {});
     },
+    setActiveChannel({ commit }, channel) {
+      commit("setActiveChannel", channel);
+    },
     addChannel({ commit }, channel) {
       commit("addChannel", channel);
 
@@ -124,11 +133,64 @@ export default createStore({
       localStorage.setItem("channels", JSON.stringify(this.state.channels));
       localStorage.setItem("messages", JSON.stringify(this.state.messages));
     },
+
+    async fetchMessagesForChannel({ state, commit }, channelId) {
+      if (
+        !state.messages[channelId] ||
+        state.messages[channelId].length === 0
+      ) {
+        try {
+          const response = await axios.get(
+            `${getUrlBase()}/chats/${channelId}/messages`,
+            {
+              headers: {
+                Authorization: `Bearer ${state.token}`,
+              },
+            }
+          );
+
+          let messages = response.data;
+          // messages = messages.map((message) => {
+          //   const user = state.users[message.senderId];
+          //   return {
+          //     ...message,
+          //     sender: user,
+          //   };
+          // });
+          commit("setMessages", { channelId, messages });
+        } catch (error) {
+          console.error(
+            `Failed to fetch messages for channel ${channelId}:`,
+            error
+          );
+        }
+      }
+    },
+
+    async sendMessage({ state, commit }, payload) {
+      try {
+        const response = await axios.post(
+          `${getUrlBase()}/chats/${payload.chatId}`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${state.token}`,
+            },
+          }
+        );
+        console.log("Message sent:", response.data);
+        commit("addMessage", {
+          channelId: payload.chatId,
+          message: response.data,
+        });
+      } catch (error) {
+        console.error("Failed to send message:", error);
+        throw error;
+      }
+    },
+
     addMessage({ commit }, { channelId, message }) {
       commit("addMessage", { channelId, message });
-
-      // Update the messages in local storage
-      localStorage.setItem("messages", JSON.stringify(this.state.messages));
     },
     loadUserState({ commit }) {
       commit("loadUserState");
@@ -140,6 +202,9 @@ export default createStore({
     },
     getUser(state) {
       return state.user;
+    },
+    getUserById: (state) => (id) => {
+      return state.users[id];
     },
     getWorkspace(state) {
       return state.workspace;
@@ -163,6 +228,12 @@ export default createStore({
     },
     getChannelMessages: (state) => (channelId) => {
       return state.messages[channelId] || [];
+    },
+    getMessagesForActiveChannel(state) {
+      if (!state.activeChannel) {
+        return [];
+      }
+      return state.messages[state.activeChannel.id] || [];
     },
   },
 });

@@ -1,38 +1,52 @@
 <template>
   <div class="message-list">
-    <div v-for="message in messages" :key="message.id" class="message">
-      <img :src="message.avatar" class="avatar" alt="Avatar" />
-      <div class="message-content">
-        <div class="message-header">
-          <span class="message-user">{{ message.user }}</span>
-          <span class="message-time">{{ formatTime(message.time) }}</span>
+    <div v-if="messages.length === 0" class="no-messages">
+      No messages in this channel yet.
+    </div>
+    <div v-else>
+      <div v-for="message in messages" :key="message.id" class="message">
+        <img
+          :src="`https://ui-avatars.com/api/?name=${getSender(
+            message.senderId
+          ).fullname.replace(' ', '+')}`"
+          class="avatar"
+          alt="Avatar"
+        />
+        <div class="message-content">
+          <div class="message-header">
+            <span class="message-user">{{
+              getSender(message.senderId).fullname
+            }}</span>
+            <span class="message-time">{{
+              formatTime(message.createdAt)
+            }}</span>
+          </div>
+          <div class="message-text">{{ message.content }}</div>
         </div>
-        <div class="message-text">{{ message.text }}</div>
       </div>
     </div>
   </div>
 </template>
 <script>
 export default {
-  data() {
-    return {
-      messages: [
-        {
-          id: 1,
-          user: "Alice",
-          avatar: "https://via.placeholder.com/40",
-          text: "Hello there!",
-          time: "2024-08-17T09:00:00Z",
-        },
-        {
-          id: 2,
-          user: "Bob",
-          avatar: "https://via.placeholder.com/40",
-          text: "Hi Alice! How are you?",
-          time: "2024-08-17T09:05:00Z",
-        },
-      ],
-    };
+  computed: {
+    messages() {
+      return this.$store.getters.getMessagesForActiveChannel;
+    },
+    activeChannelId() {
+      let channel = this.$store.state.activeChannel;
+      if (!channel) {
+        return null;
+      }
+      return channel.id;
+    },
+  },
+  watch: {
+    activeChannelId(newChannelId) {
+      if (newChannelId) {
+        this.fetchMessages(newChannelId);
+      }
+    },
   },
   methods: {
     formatTime(time) {
@@ -42,6 +56,17 @@ export default {
         minute: "2-digit",
       });
     },
+    fetchMessages(channelId) {
+      this.$store.dispatch("fetchMessagesForChannel", channelId);
+    },
+    getSender(userId) {
+      return this.$store.getters.getUserById(userId);
+    },
+  },
+  mounted() {
+    if (this.activeChannelId) {
+      this.fetchMessages(this.activeChannelId);
+    }
   },
 };
 </script>
@@ -86,5 +111,11 @@ export default {
   line-height: 1.4;
   word-wrap: break-word;
   white-space: pre-wrap;
+}
+
+.no-messages {
+  text-align: center;
+  color: #b9bbbe;
+  margin-top: 20px;
 }
 </style>

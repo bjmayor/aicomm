@@ -32,12 +32,33 @@ export default {
       message: "",
     };
   },
+  computed: {
+    userId() {
+      return this.$store.state.user.id;
+    },
+
+    activeChannelId() {
+      const channel = this.$store.state.activeChannel;
+      if (!channel) {
+        return null;
+      }
+      return channel.id;
+    },
+  },
   methods: {
-    sendMessage() {
-      if (this.message.trim()) {
-        // Dispatch the message to Vuex store or perform the send operation
-        this.$store.dispatch("sendMessage", this.message);
-        this.message = "";
+    async sendMessage() {
+      if (this.message.trim() === "") return;
+
+      const payload = {
+        chatId: this.activeChannelId,
+        content: this.message,
+      };
+      console.log("Sending message:", payload);
+      try {
+        this.$store.dispatch("sendMessage", payload);
+        this.message = ""; // Clear the input after sending
+      } catch (error) {
+        console.error("Failed to send message:", error);
       }
     },
   },
