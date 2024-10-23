@@ -1,5 +1,3 @@
-use std::default;
-
 use config::{Config, ConfigError, File, FileFormat};
 use serde::{Deserialize, Serialize};
 
@@ -11,6 +9,7 @@ pub struct ServerConfig {
     pub notify: String,
 }
 
+/// app config
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AppConfig {
     pub server: ServerConfig,

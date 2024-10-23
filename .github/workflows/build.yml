@@ -47,11 +47,11 @@ jobs:
         uses: taiki-e/install-action@nextest
       - uses: Swatinem/rust-cache@v2
       - name: Check code format
-        run: cargo fmt -- --check
+        run: cd src-tauri &&  cargo fmt -- --check
       - name: Check the package for errors
-        run: cargo check --all
+        run: cd src-tauri &&  cargo check --all
       - name: Lint rust sources
-        run: cargo clippy --all-targets --all-features --tests --benches -- -D warnings
+        run: cd src-tauri &&  cargo clippy --all-targets --all-features --tests --benches -- -D warnings
       - name: Execute rust tests
         run: cargo nextest run --all-features
       - name: Generate a changelog
