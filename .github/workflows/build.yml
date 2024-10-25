@@ -13,6 +13,9 @@ on:
 permissions:
   contents: write
 
+env:
+  SUBDIRS: "chat chatapp"
+
 jobs:
   build-rust:
     strategy:
@@ -47,13 +50,41 @@ jobs:
         uses: taiki-e/install-action@nextest
       - uses: Swatinem/rust-cache@v2
       - name: Check code format
-        run: cd src-tauri &&  cargo fmt -- --check
+        run: |
+          for dir in $SUBDIRS; do
+            if [ -d "$dir" ]; then
+              cd "$dir"
+              cargo fmt -- --check
+              cd ..
+            fi
+          done
       - name: Check the package for errors
-        run: cd src-tauri &&  cargo check --all
+        run: |
+          for dir in $SUBDIRS; do
+            if [ -d "$dir" ]; then
+              cd "$dir"
+              cargo check --all
+              cd ..
+            fi
+          done
       - name: Lint rust sources
-        run: cd src-tauri &&  cargo clippy --all-targets --all-features --tests --benches -- -D warnings
+        run: |
+          for dir in $SUBDIRS; do
+            if [ -d "$dir" ]; then
+              cd "$dir"
+              cargo clippy --all-targets --all-features --tests --benches -- -D warnings
+              cd ..
+            fi
+          done
       - name: Execute rust tests
-        run: cargo nextest run --all-features
+        run: |
+          for dir in $SUBDIRS; do
+            if [ -d "$dir" ]; then
+              cd "$dir"
+              cargo nextest run --all-features
+              cd ..
+            fi
+          done
       - name: Generate a changelog
         uses: orhun/git-cliff-action@v2
         id: git-cliff
