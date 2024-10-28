@@ -29,11 +29,12 @@ repos:
         entry: |
           bash -c '
           SUBDIRS="chat chatapp/src-tauri"
+          ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
               cd "$dir"
               cargo fmt -- --check
-              cd ..
+              cd "$ROOT_DIR"
             fi
           done
           '
@@ -45,11 +46,12 @@ repos:
         entry: |
           bash -c '
           SUBDIRS="chat chatapp/src-tauri"
+          ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
               cd "$dir"
               cargo deny check
-              cd ..
+              cd "$ROOT_DIR"
             fi
           done
           '
@@ -62,11 +64,12 @@ repos:
         entry: |
           bash -c '
           SUBDIRS="chat chatapp/src-tauri"
+          ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
               cd "$dir"
               typos
-              cd ..
+              cd "$ROOT_DIR"
             fi
           done
           '
@@ -79,11 +82,12 @@ repos:
         entry: |
           bash -c '
           SUBDIRS="chat chatapp/src-tauri"
+          ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
               cd "$dir"
               cargo check --all
-              cd ..
+              cd
             fi
           done
           '
@@ -96,11 +100,12 @@ repos:
         entry: |
           bash -c '
           SUBDIRS="chat chatapp/src-tauri"
+          ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
               cd "$dir"
               cargo clippy --all-targets --all-features --tests --benches -- -D warnings
-              cd ..
+              cd "$ROOT_DIR"
             fi
           done
           '
@@ -113,11 +118,12 @@ repos:
         entry: |
           bash -c '
           SUBDIRS="chat chatapp/src-tauri"
+          ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
               cd "$dir"
               cargo nextest run --all-features
-              cd ..
+              cd "$ROOT_DIR"
             fi
           done
           '

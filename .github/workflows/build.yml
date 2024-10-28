@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # submodules: recursive
+          submodules: recursive
       - name: install dependencies
         run: |
           sudo apt-get update
@@ -58,38 +58,42 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Check code format
         run: |
+          ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
               cd "$dir"
               cargo fmt -- --check
-              cd ..
+              cd "$ROOT_DIR"
             fi
           done
       - name: Check the package for errors
         run: |
+          ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
               cd "$dir"
               cargo check --all
-              cd ..
+              cd "$ROOT_DIR"
             fi
           done
       - name: Lint rust sources
         run: |
+          ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
               cd "$dir"
               cargo clippy --all-targets --all-features --tests --benches -- -D warnings
-              cd ..
+              cd "$ROOT_DIR"
             fi
           done
       - name: Execute rust tests
         run: |
+          ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
               cd "$dir"
               cargo nextest run --all-features
-              cd ..
+              cd "$ROOT_DIR"
             fi
           done
       - name: Generate a changelog
