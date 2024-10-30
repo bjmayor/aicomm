@@ -106,6 +106,45 @@ pub struct Message {
     pub created_at: DateTime<Utc>,
 }
 
+/*
+CREATE TYPE agent_type AS ENUM ('proxy', 'reply', 'tap');
+-- add chat_agent table
+CREATE TABLE chat_agents (
+    id bigserial PRIMARY KEY,
+    chat_id bigint NOT NULL REFERENCES chat(id),
+    name text NOT NULL UNIQUE,
+    type agent_type NOT NULL DEFAULT 'reply',
+    prompt text NOT NULL,
+    args jsonb NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+*/
+
+#[derive(Debug, Clone, ToSchema, Serialize, Deserialize, PartialEq, PartialOrd, sqlx::Type)]
+#[sqlx(type_name = "agent_type", rename_all = "snake_case")]
+#[serde(rename_all(serialize = "camelCase"))]
+pub enum AgentType {
+    #[serde(alias = "proxy", alias = "Proxy")]
+    Proxy,
+    #[serde(alias = "reply", alias = "Reply")]
+    Reply,
+    #[serde(alias = "tap", alias = "Tap")]
+    Tap,
+}
+
+#[derive(Debug, Clone, FromRow, ToSchema, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all(serialize = "camelCase"))]
+pub struct ChatAgent {
+    pub id: i64,
+    pub chat_id: i64,
+    pub name: String,
+    pub r#type: AgentType,
+    pub prompt: String,
+    pub args: sqlx::types::Json<serde_json::Value>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
 impl User {
     pub fn new(id: i64, fullname: &str, email: &str) -> Self {
         Self {
