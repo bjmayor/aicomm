@@ -1,3 +1,4 @@
+use crate::ErrorOutput;
 use crate::{AppError, AppState, CreateChat};
 use axum::{
     extract::{Path, State},
@@ -5,6 +6,7 @@ use axum::{
     response::IntoResponse,
     Extension, Json,
 };
+use chat_core::Chat;
 use chat_core::User;
 
 /// List all chats in the workspace of the user.

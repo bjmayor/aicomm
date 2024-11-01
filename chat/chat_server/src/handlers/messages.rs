@@ -7,7 +7,9 @@ use axum::{
 use tokio::fs;
 use tracing::{info, warn};
 
+use crate::ErrorOutput;
 use crate::{AppError, AppState, ChatFile, CreateMessage, ListMessages};
+use chat_core::Message;
 use chat_core::User;
 
 /// Send a new message in the chat.

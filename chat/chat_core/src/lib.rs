@@ -141,6 +141,7 @@ pub struct ChatAgent {
     pub name: String,
     pub r#type: AgentType,
     pub prompt: String,
+    #[schema(value_type = Object)]
     pub args: sqlx::types::Json<serde_json::Value>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,

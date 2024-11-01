@@ -66,7 +66,7 @@ mod tests {
     use anyhow::Result;
     use axum::{body::Body, middleware::from_fn_with_state, routing::get, Router};
     use std::sync::Arc;
-    use tower::ServiceExt;
+    use tower::{Service, ServiceExt};
 
     #[derive(Clone)]
     struct AppState(Arc<AppStateInner>);
