@@ -1,46 +1,70 @@
 <template>
-  <div class="sidebar">
-    <div class="workspace">
-      <div class="workspace-name" @click="toggleDropdown">
+  <div class="w-64 bg-gray-800 text-white flex flex-col h-screen p-4 text-sm">
+    <div class="flex items-center justify-between mb-6">
+      <div
+        class="font-bold text-base truncate cursor-pointer"
+        @click="toggleDropdown"
+      >
         <span>{{ workspaceName }}</span>
-        <button class="dropdown-toggle">&nbsp;▼</button>
+        <button class="text-gray-400 ml-1">&nbsp;▼</button>
       </div>
-      <div v-if="dropdownVisible" class="dropdown-menu">
-        <ul>
-          <li @click="logout">Logout</li>
+      <div
+        v-if="dropdownVisible"
+        class="absolute top-12 left-0 w-48 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10"
+      >
+        <ul class="py-1">
+          <li
+            @click="logout"
+            class="px-4 py-2 hover:bg-gray-700 cursor-pointer"
+          >
+            Logout
+          </li>
           <!-- Add more dropdown items here as needed -->
         </ul>
       </div>
-      <button class="add-channel" @click="addChannel">+</button>
+      <button
+        @click="addChannel"
+        class="text-gray-400 text-xl hover:text-white"
+      >
+        +
+      </button>
     </div>
-    <div class="channels">
-      <h2>Channels</h2>
+
+    <div class="mb-6">
+      <h2 class="text-xs uppercase text-gray-400 mb-2">Channels</h2>
       <ul>
         <li
           v-for="channel in channels"
           :key="channel.id"
           @click="selectChannel(channel.id)"
-          :class="{ active: channel.id === activeChannelId }"
+          :class="[
+            'px-2 py-1 rounded cursor-pointer',
+            { 'bg-blue-600': channel.id === activeChannelId },
+          ]"
         >
           # {{ channel.name }}
         </li>
       </ul>
     </div>
-    <div class="direct-messages">
-      <h2>Direct Messages</h2>
+
+    <div>
+      <h2 class="text-xs uppercase text-gray-400 mb-2">Direct Messages</h2>
       <ul>
         <li
           v-for="channel in singleChannels"
           :key="channel.id"
           @click="selectChannel(channel.id)"
-          :class="{ active: channel.id === activeChannelId }"
+          :class="[
+            'flex items-center px-2 py-1 rounded cursor-pointer',
+            { 'bg-blue-600': channel.id === activeChannelId },
+          ]"
         >
           <img
             :src="`https://ui-avatars.com/api/?name=${channel.recipient.fullname.replace(
               ' ',
               '+'
             )}`"
-            class="avatar"
+            class="w-6 h-6 rounded-full mr-2"
             alt="Avatar"
           />
           {{ channel.recipient.fullname }}
@@ -49,11 +73,12 @@
     </div>
   </div>
 </template>
+
 <script>
 export default {
   data() {
     return {
-      dropdownVisible: false, // Control visibility of the dropdown menu
+      dropdownVisible: false,
     };
   },
   computed: {
@@ -71,9 +96,7 @@ export default {
       return channel.id;
     },
     singleChannels() {
-      // Placeholder for direct messages, if needed.
-      // This could be another state managed by Vuex.
-      return this.$store.getters.getSingleChannels;
+      return this.$store.getters.getSingChannels;
     },
   },
   methods: {
@@ -82,7 +105,7 @@ export default {
     },
     logout() {
       this.$store.dispatch("logout");
-      this.$router.push("/login"); // Redirect to login after logout
+      this.$router.push("/login");
     },
     handleOutsideClick(event) {
       if (!this.$el.contains(event.target)) {
@@ -90,9 +113,8 @@ export default {
       }
     },
     addChannel() {
-      // Trigger an action to add a new channel
       const newChannel = {
-        id: Date.now().toString(), // Unique ID for the new channel
+        id: Date.now().toString(),
         name: `Channel ${this.channels.length + 1}`,
       };
       this.$store.dispatch("addChannel", newChannel);
@@ -109,136 +131,3 @@ export default {
   },
 };
 </script>
-<style scoped>
-/* Base sidebar styling */
-.sidebar {
-  width: 250px;
-  background-color: #2f3136;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  padding: 10px;
-  font-size: 14px;
-}
-/* Workspace section */
-.workspace {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-.workspace-name {
-  font-weight: bold;
-  font-size: 16px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dropdown-toggle {
-  background: none;
-  border: none;
-  color: #b9bbbe;
-  font-size: 16px;
-  cursor: pointer;
-  padding: 0;
-  margin: 0;
-}
-.dropdown-menu {
-  position: absolute;
-  top: 40px;
-  left: 0;
-  width: 200px;
-  background-color: #2f3136;
-  border: 1px solid #3a3e44;
-  border-radius: 4px;
-  padding: 10px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-}
-.dropdown-menu ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.dropdown-menu li {
-  padding: 8px;
-  cursor: pointer;
-  color: #b9bbbe;
-}
-.dropdown-menu li:hover {
-  background-color: #3a3e44;
-  color: #fff;
-}
-
-.add-channel {
-  background: none;
-  border: none;
-  color: #b9bbbe;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 0;
-  margin: 0;
-}
-.add-channel:hover {
-  color: #fff;
-}
-/* Channels section */
-.channels {
-  margin-bottom: 20px;
-}
-.channels h2 {
-  font-size: 12px;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-  color: #b9bbbe;
-}
-.channels ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-.channels li {
-  padding: 5px 10px;
-  cursor: pointer;
-  border-radius: 4px;
-}
-.channels li:hover {
-  background-color: #3a3e44;
-}
-
-/* Active channel styling */
-.channels li.active {
-  background-color: #5865f2; /* Highlight color for active channel */
-  color: #ffffff;
-}
-/* Direct Messages section */
-.direct-messages h2 {
-  font-size: 12px;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-  color: #b9bbbe;
-}
-.direct-messages ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-.direct-messages li {
-  display: flex;
-  align-items: center;
-  padding: 5px 10px;
-  cursor: pointer;
-  border-radius: 4px;
-}
-.direct-messages li:hover {
-  background-color: #3a3e44;
-}
-.avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  margin-right: 10px;
-}
-</style>

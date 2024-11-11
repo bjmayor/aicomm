@@ -1,34 +1,68 @@
 <template>
-  <div class="message-list">
-    <div v-if="messages.length === 0" class="no-messages">
+  <div class="flex-1 overflow-y-auto p-5 mb-10" ref="messageContainer">
+    <div v-if="messages.length === 0" class="text-center text-gray-400 mt-5">
       No messages in this channel yet.
     </div>
     <div v-else>
-      <div v-for="message in messages" :key="message.id" class="message">
+      <div
+        v-for="message in messages"
+        :key="message.id"
+        class="flex items-start mb-5"
+      >
         <img
           :src="`https://ui-avatars.com/api/?name=${getSender(
             message.senderId
           ).fullname.replace(' ', '+')}`"
-          class="avatar"
+          class="w-10 h-10 rounded-full mr-3"
           alt="Avatar"
         />
-        <div class="message-content">
-          <div class="message-header">
-            <span class="message-user">{{
+        <div class="max-w-4/5">
+          <div class="flex items-center mb-1">
+            <span class="font-bold mr-2">{{
               getSender(message.senderId).fullname
             }}</span>
-            <span class="message-time">{{
-              formatTime(message.createdAt)
+            <span class="text-xs text-gray-500">{{
+              message.formattedCreatedAt
             }}</span>
           </div>
-          <div class="message-text">{{ message.content }}</div>
+          <div class="text-sm leading-relaxed break-words whitespace-pre-wrap">
+            {{ message.content }}
+          </div>
+          <div
+            v-if="message.files && message.files.length > 0"
+            class="grid grid-cols-3 gap-2 mt-2"
+          >
+            <div
+              v-for="(file, index) in message.files"
+              :key="index"
+              class="relative"
+            >
+              <img
+                :src="getFileUrl(file)"
+                :class="{
+                  'h-32 object-cover cursor-pointer': true,
+                  'w-auto h-auto': enlargedImage[message.id],
+                }"
+                @click="toggleImage(message.id)"
+                alt="Uploaded file"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
 <script>
+import { getUrlBase } from "../utils";
+
 export default {
+  data() {
+    return {
+      enlargedImage: {},
+    };
+  },
   computed: {
     messages() {
       return this.$store.getters.getMessagesForActiveChannel;
@@ -42,6 +76,14 @@ export default {
     },
   },
   watch: {
+    messages: {
+      handler() {
+        this.$nextTick(() => {
+          this.scrollToBottom();
+        });
+      },
+      deep: true,
+    },
     activeChannelId(newChannelId) {
       if (newChannelId) {
         this.fetchMessages(newChannelId);
@@ -49,73 +91,34 @@ export default {
     },
   },
   methods: {
-    formatTime(time) {
-      const date = new Date(time);
-      return date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    },
     fetchMessages(channelId) {
       this.$store.dispatch("fetchMessagesForChannel", channelId);
     },
     getSender(userId) {
       return this.$store.getters.getUserById(userId);
     },
+    scrollToBottom() {
+      const container = this.$refs.messageContainer;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    },
+    getFileUrl(file) {
+      return `${getUrlBase()}${file}?token=${this.$store.state.token}`;
+    },
+    toggleImage(messageId) {
+      this.enlargedImage[messageId] = !this.enlargedImage[messageId];
+      this.enlargedImage = { ...this.enlargedImage };
+    },
   },
   mounted() {
     if (this.activeChannelId) {
       this.fetchMessages(this.activeChannelId);
     }
+    this.scrollToBottom();
+  },
+  updated() {
+    this.scrollToBottom();
   },
 };
 </script>
-<style scoped>
-/* Container styling */
-.message-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-}
-/* Individual message styling */
-.message {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  margin-right: 10px;
-}
-.message-content {
-  max-width: 80%;
-}
-/* Header styling: username and timestamp */
-.message-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 5px;
-}
-.message-user {
-  font-weight: bold;
-  margin-right: 10px;
-}
-.message-time {
-  font-size: 12px;
-}
-/* Message text styling */
-.message-text {
-  font-size: 14px;
-  line-height: 1.4;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-}
-
-.no-messages {
-  text-align: center;
-  color: #b9bbbe;
-  margin-top: 20px;
-}
-</style>
