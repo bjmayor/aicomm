@@ -63,11 +63,14 @@ pub struct ChatUser {
     pub email: String,
 }
 
-#[derive(Debug, Clone, ToSchema, Serialize, Deserialize, PartialEq, PartialOrd, sqlx::Type)]
+#[derive(
+    Debug, Clone, Default, ToSchema, Serialize, Deserialize, PartialEq, PartialOrd, sqlx::Type,
+)]
 #[sqlx(type_name = "chat_type", rename_all = "snake_case")]
 #[serde(rename_all(serialize = "camelCase"))]
 pub enum ChatType {
     #[serde(alias = "single", alias = "Single")]
+    #[default]
     Single,
     #[serde(alias = "group", alias = "Group")]
     Group,
@@ -106,26 +109,14 @@ pub struct Message {
     pub created_at: DateTime<Utc>,
 }
 
-/*
-CREATE TYPE agent_type AS ENUM ('proxy', 'reply', 'tap');
--- add chat_agent table
-CREATE TABLE chat_agents (
-    id bigserial PRIMARY KEY,
-    chat_id bigint NOT NULL REFERENCES chat(id),
-    name text NOT NULL UNIQUE,
-    type agent_type NOT NULL DEFAULT 'reply',
-    prompt text NOT NULL,
-    args jsonb NOT NULL,
-    created_at timestamptz NOT NULL DEFAULT now(),
-    updated_at timestamptz NOT NULL DEFAULT now()
-);
-*/
-
-#[derive(Debug, Clone, ToSchema, Serialize, Deserialize, PartialEq, PartialOrd, sqlx::Type)]
+#[derive(
+    Debug, Clone, Default, ToSchema, Serialize, Deserialize, PartialEq, PartialOrd, sqlx::Type,
+)]
 #[sqlx(type_name = "agent_type", rename_all = "snake_case")]
 #[serde(rename_all(serialize = "camelCase"))]
 pub enum AgentType {
     #[serde(alias = "proxy", alias = "Proxy")]
+    #[default]
     Proxy,
     #[serde(alias = "reply", alias = "Reply")]
     Reply,
@@ -137,13 +128,16 @@ pub enum AgentType {
 #[serde(rename_all(serialize = "camelCase"))]
 pub struct ChatAgent {
     pub id: i64,
+    #[serde(alias = "chatId")]
     pub chat_id: i64,
     pub name: String,
     pub r#type: AgentType,
     pub prompt: String,
     #[schema(value_type = Object)]
     pub args: sqlx::types::Json<serde_json::Value>,
+    #[serde(alias = "createdAt")]
     pub created_at: DateTime<Utc>,
+    #[serde(alias = "updatedAt")]
     pub updated_at: DateTime<Utc>,
 }
 impl User {

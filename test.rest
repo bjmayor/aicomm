@@ -222,3 +222,34 @@ Content-Type: application/json
 
 curl -X POST http://localhost:6690/api/event
 -H "Content-Type: application/protobuf" -H "Authorization: Bearer {{token}}" -H "X-Country: China" -H "X-Region: Shanghai" -H "X-City: Shanghai" --data-binary @./fixtures/event.bin
+
+### list chat agents
+
+GET http://localhost:6688/api/chats/1/agents
+Authorization: Bearer {{token}}
+
+### create chat agent
+
+POST http://localhost:6688/api/chats/1/agents
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+"name": "agent1 ",
+"type": "proxy",
+"prompt": "You are a helpful assistant."
+}
+
+### update chat agent
+
+PATCH http://localhost:6688/api/chats/1/agents
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+"id": 5,
+"prompt": "You are a helpful assistant.",
+ "args": {
+	"temperature": 0.5
+ }
+ }
