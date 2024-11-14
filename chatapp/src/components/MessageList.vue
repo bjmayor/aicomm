@@ -26,7 +26,11 @@
             }}</span>
           </div>
           <div class="text-sm leading-relaxed break-words whitespace-pre-wrap">
-            {{ message.content }}
+            {{
+              isCurrentUser(message.senderId)
+                ? message.content
+                : message.modifiedContent || message.content
+            }}
           </div>
           <div
             v-if="message.files && message.files.length > 0"
@@ -96,6 +100,9 @@ export default {
     },
     getSender(userId) {
       return this.$store.getters.getUserById(userId);
+    },
+    isCurrentUser(userId) {
+      return userId === this.$store.state.user.id;
     },
     scrollToBottom() {
       const container = this.$refs.messageContainer;
