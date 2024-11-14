@@ -1,5 +1,5 @@
 use crate::{AppError, AppState};
-use chat_core::{Agent, AgentType, ChatAgent};
+use chat_core::{AdapterType, Agent, AgentType, ChatAgent};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 use utoipa::ToSchema;
@@ -9,6 +9,8 @@ use utoipa::ToSchema;
 pub struct CreateAgent {
     pub name: String,
     pub r#type: AgentType,
+    pub adapter: AdapterType,
+    pub model: String,
     pub prompt: String,
     #[schema(value_type = Object)]
     #[serde(default = "default_args")]
@@ -46,17 +48,19 @@ impl AppState {
                 input.name
             )));
         }
-
+        // TODO: check if model is supported by adapter
         let agent = sqlx::query_as(
             r#"
-            INSERT INTO chat_agents(chat_id, name, type, prompt,args)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO chat_agents(chat_id, name, type, adapter, model, prompt,args)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *
             "#,
         )
         .bind(chat_id as i64)
         .bind(input.name)
         .bind(input.r#type)
+        .bind(input.adapter)
+        .bind(input.model)
         .bind(input.prompt)
         .bind(input.args)
         .fetch_one(&self.pool)
@@ -140,14 +144,32 @@ impl AppState {
 }
 #[cfg(test)]
 impl CreateAgent {
-    pub fn new(name: impl Into<String>, r#type: AgentType, prompt: impl Into<String>, args: impl Serialize) -> Self {
-        Self { name: name.into(), r#type, prompt: prompt.into(), args: serde_json::to_value(args).unwrap() }
+    pub fn new(
+        name: impl Into<String>,
+        r#type: AgentType,
+        adapter: AdapterType,
+        model: impl Into<String>,
+        prompt: impl Into<String>,
+        args: impl Serialize,
+    ) -> Self {
+        Self {
+            name: name.into(),
+            r#type,
+            adapter,
+            model: model.into(),
+            prompt: prompt.into(),
+            args: serde_json::to_value(args).unwrap(),
+        }
     }
 }
 #[cfg(test)]
 impl UpdateAgent {
     pub fn new(id: u64, prompt: impl Into<String>, args: impl Serialize) -> Self {
-        Self { id, prompt: prompt.into(), args: serde_json::to_value(args).unwrap() }
+        Self {
+            id,
+            prompt: prompt.into(),
+            args: serde_json::to_value(args).unwrap(),
+        }
     }
 }
 
@@ -161,8 +183,10 @@ mod tests {
     async fn create_agent_should_work() -> Result<()> {
         let (_tdb, state) = AppState::new_for_test().await?;
         let input = CreateAgent::new(
-            "test".to_string(),
+            "test",
             AgentType::Proxy,
+            AdapterType::Ollama,
+            "llama3.2",
             "You are a helpful assistant.".to_string(),
             HashMap::<String, String>::new(),
         );
@@ -173,21 +197,23 @@ mod tests {
         assert_eq!(agent.chat_id, 1);
         assert_eq!(agent.r#type, AgentType::Proxy);
         assert_eq!(agent.name, "test");
+        assert_eq!(agent.adapter, AdapterType::Ollama);
+        assert_eq!(agent.model, "llama3.2");
         assert_eq!(agent.prompt, "You are a helpful assistant.");
         assert_eq!(agent.args, sqlx::types::Json(serde_json::json!({})));
         Ok(())
     }
 
     /*
-    INSERT INTO chat_agents(chat_id, name, type, prompt, args)
-VALUES (
-    1,
-    'translation',
-    'proxy',
-    'If language is Chinese, translate to English, if language is English, translate to Chinese. Please reply with the translated content directly. No explanation is needed. Here is the content',
-    '{}'
-  );
-     */
+        INSERT INTO chat_agents(chat_id, name, type, prompt, args)
+    VALUES (
+        1,
+        'translation',
+        'proxy',
+        'If language is Chinese, translate to English, if language is English, translate to Chinese. Please reply with the translated content directly. No explanation is needed. Here is the content',
+        '{}'
+      );
+         */
     #[tokio::test]
     async fn list_agents_should_work() -> Result<()> {
         let (_tdb, state) = AppState::new_for_test().await?;
@@ -196,7 +222,7 @@ VALUES (
         assert_eq!(agents[0].name, "translation");
         assert_eq!(agents[0].r#type, AgentType::Proxy);
         assert_eq!(agents[0].prompt, "If language is Chinese, translate to English, if language is English, translate to Chinese. Please reply with the translated content directly. No explanation is needed. Here is the content");
-        assert_eq!(agents[0].args,  sqlx::types::Json(serde_json::json!({})));
+        assert_eq!(agents[0].args, sqlx::types::Json(serde_json::json!({})));
         Ok(())
     }
 
@@ -207,13 +233,25 @@ VALUES (
         let input = CreateAgent::new(
             "test".to_string(),
             AgentType::Proxy,
+            AdapterType::Ollama,
+            "llama3.2",
             "You are a helpful assistant.".to_string(),
             HashMap::<String, String>::new(),
         );
-        let agent = state.create_agent(input, 1).await.expect("create agent failed");
+        let agent = state
+            .create_agent(input, 1)
+            .await
+            .expect("create agent failed");
         // update the agent
-        let input = UpdateAgent::new(agent.id as _, "Can you tell me your name?", HashMap::<String, String>::new());
-        let agent = state.update_agent(input, 1).await.expect("update agent failed");
+        let input = UpdateAgent::new(
+            agent.id as _,
+            "Can you tell me your name?",
+            HashMap::<String, String>::new(),
+        );
+        let agent = state
+            .update_agent(input, 1)
+            .await
+            .expect("update agent failed");
         assert_eq!(agent.prompt, "Can you tell me your name?");
         assert_eq!(agent.args, sqlx::types::Json(serde_json::json!({})));
         Ok(())

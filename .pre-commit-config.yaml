@@ -122,7 +122,7 @@ repos:
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
               cd "$dir"
-              cargo nextest run --all-features
+              cargo nextest run --all-features --include-ignored
               cd "$ROOT_DIR"
             fi
           done

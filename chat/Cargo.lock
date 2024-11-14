@@ -474,6 +474,7 @@ dependencies = [
 name = "chat-server"
 version = "0.1.0"
 dependencies = [
+ "ai_sdk",
  "anyhow",
  "argon2",
  "axum",

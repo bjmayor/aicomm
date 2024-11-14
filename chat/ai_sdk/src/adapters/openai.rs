@@ -1,9 +1,9 @@
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-use crate::{AiService, Message, Role};
+use crate::{AiAdapter, AiService, Message, Role};
 
-pub struct OpenAIAdapter {
+pub struct OpenaiAdapter {
     pub host: String,
     pub api_key: String,
     pub model: String,
@@ -55,7 +55,7 @@ pub struct OpenAICompletionTokensDetails {
     pub rejected_prediction_tokens: i32,
 }
 
-impl OpenAIAdapter {
+impl OpenaiAdapter {
     pub fn new(api_key: impl Into<String>, model: impl Into<String>) -> Self {
         Self {
             host: "https://api.openai.com/v1".to_string(),
@@ -66,7 +66,7 @@ impl OpenAIAdapter {
     }
 }
 
-impl AiService for OpenAIAdapter {
+impl AiService for OpenaiAdapter {
     async fn complete(&self, messages: &[Message]) -> anyhow::Result<String> {
         let request = OpenAIChatCompletionRequest {
             model: self.model.clone(),
@@ -115,6 +115,12 @@ impl From<&Message> for OpenAIMessage {
     }
 }
 
+impl From<OpenaiAdapter> for AiAdapter {
+    fn from(adapter: OpenaiAdapter) -> Self {
+        Self::OpenAI(adapter)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -123,7 +129,7 @@ mod tests {
     #[tokio::test]
     async fn test_complete() {
         let api_key = std::env::var("OPENAI_API_KEY").unwrap();
-        let adapter = OpenAIAdapter::new(api_key, "gpt-3.5-turbo");
+        let adapter = OpenaiAdapter::new(api_key, "gpt-3.5-turbo");
         let response = adapter
             .complete(&[Message {
                 role: Role::User,
