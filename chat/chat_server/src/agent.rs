@@ -1,3 +1,4 @@
+#![allow(unused)]
 use std::env;
 
 use ai_sdk::{AiAdapter, AiService, OllamaAdapter, OpenaiAdapter};
@@ -136,7 +137,7 @@ mod tests {
         let agent = agents.first().expect("no agent found");
         let agent: AgentVariant = agent.clone().into();
         let msg = "test";
-        let decision = agent.process(&msg, &AgentContext::default()).await?;
+        let decision = agent.process(msg, &AgentContext::default()).await?;
         // test if it is modify
         assert!(matches!(decision, AgentDecision::Modify(_)));
         Ok(())

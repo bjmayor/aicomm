@@ -1,7 +1,7 @@
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-use crate::{AiAdapter, AiService, Message, Role};
+use crate::{AiAdapter, AiService, Message};
 
 pub struct OpenaiAdapter {
     pub host: String,
@@ -124,6 +124,7 @@ impl From<OpenaiAdapter> for AiAdapter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Role;
 
     #[ignore]
     #[tokio::test]

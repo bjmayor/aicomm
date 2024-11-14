@@ -1,5 +1,5 @@
 use crate::{AppError, AppState};
-use chat_core::{AdapterType, Agent, AgentType, ChatAgent};
+use chat_core::{AdapterType, AgentType, ChatAgent};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 use utoipa::ToSchema;
