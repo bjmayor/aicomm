@@ -28,7 +28,7 @@ repos:
         description: Format files with rustfmt.
         entry: |
           bash -c '
-          SUBDIRS="chat chatapp/src-tauri"
+          SUBDIRS="chat chatapp/src-tauri swiftide-pgvector"
           ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
@@ -45,7 +45,7 @@ repos:
         description: Check cargo dependencies
         entry: |
           bash -c '
-          SUBDIRS="chat chatapp/src-tauri"
+          SUBDIRS="chat chatapp/src-tauri swiftide-pgvector"
           ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
@@ -63,7 +63,7 @@ repos:
         description: check typo
         entry: |
           bash -c '
-          SUBDIRS="chat chatapp/src-tauri"
+          SUBDIRS="chat chatapp/src-tauri swiftide-pgvector"
           ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
@@ -81,13 +81,13 @@ repos:
         description: Check the package for errors.
         entry: |
           bash -c '
-          SUBDIRS="chat chatapp/src-tauri"
+          SUBDIRS="chat chatapp/src-tauri swiftide-pgvector"
           ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
               cd "$dir"
               cargo check --all
-              cd
+              cd "$ROOT_DIR"
             fi
           done
           '
@@ -99,7 +99,7 @@ repos:
         description: Lint rust sources
         entry: |
           bash -c '
-          SUBDIRS="chat chatapp/src-tauri"
+          SUBDIRS="chat chatapp/src-tauri swiftide-pgvector"
           ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
@@ -117,7 +117,7 @@ repos:
         description: unit test for the project
         entry: |
           bash -c '
-          SUBDIRS="chat chatapp/src-tauri"
+          SUBDIRS="chat chatapp/src-tauri swiftide-pgvector"
           ROOT_DIR=$PWD
           for dir in $SUBDIRS; do
             if [ -d "$dir" ]; then
