@@ -1,2 +1,4 @@
 /target
 .DS_Store
+./bot-server/.fastembed_cache
+.fastembed_cache

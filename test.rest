@@ -111,15 +111,21 @@ POST http://localhost:6688/api/upload
 Authorization: Bearer {{token}}
 Content-Type: multipart/form-data; boundary=MyBoundary
 
---MyBoundary Content-Disposition: form-data; filename="xdiff1.png" Content-Type: application/octet-stream
+--MyBoundary
+Content-Disposition: form-data; filename="abc.jpeg"
+Content-Type: application/octet-stream
 
-< ./fixtures/xdiff1.png --MyBoundary Content-Disposition: form-data; filename="hello.txt" Content-Type: text/plain
+< ./chat/chat_server/fixtures/abc.jpeg
+--MyBoundary
+Content-Disposition: form-data; filename="hello.txt"
+Content-Type: text/plain
 
-Hello, World! --MyBoundary--
+Hello, World!
+--MyBoundary--
 
 ### get files
 
-GET http://localhost:6688/api/files/1/339/807/e635afbeab088ce33206fdf4223a6bb156.png
+GET http://localhost:6688/api/files/1/9e6/dc5/2e8ea91f75d42dd3ae4d2c06dd46dae6ea.jpeg
 Authorization: Bearer {{token}}
 
 ### get files with token
@@ -192,7 +198,7 @@ POST http://localhost:6688/api/signup
 Content-Type: application/json
 
 {
-"workspace": "acme", "fullname": "Her", "email": "her@bot.org", "password": "123456"
+"workspace": "acme", "fullname": "Her", "email": "her1@bot.org", "password": "123456"
 }
 
 ### create direct chat
@@ -274,4 +280,27 @@ Authorization: Bearer {{token}}
 {
     "content": "Well done! You made great progress today.",
     "files": []
+}
+
+### create chat
+POST http://localhost:6688/api/chats
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+"name": "project Bot", "members": [1, 5], "public": false
+}
+
+### create chat agent
+
+POST http://localhost:6688/api/chats/7/agents
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+ "name": "code guru",
+"type": "reply",
+ "adapter": "ollama",
+ "model": "llama3.2",
+    "prompt": "you will answer questions about code."
 }
