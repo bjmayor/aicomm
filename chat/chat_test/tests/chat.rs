@@ -167,7 +167,7 @@ impl ChatServer {
             .post(format!("http://{}/api/chats/{}/agents", self.addr, chat_id))
             .header("Authorization", format!("Bearer {}", self.token))
             .header("Content-Type", "application/json")
-            .body(r#"{"name": "test", "type": "proxy", "prompt": "Can you tell me your name?", "args": {}}"#);
+            .body(r#"{"name": "test", "type": "proxy", "adapter": "test", "model": "llama3.2", "prompt": "Can you tell me your name?", "args": {}}"#);
         let res = res.send().await?;
         assert_eq!(res.status(), StatusCode::CREATED);
         let agent: ChatAgent = res.json().await?;

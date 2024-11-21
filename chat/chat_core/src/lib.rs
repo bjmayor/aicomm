@@ -140,6 +140,8 @@ pub enum AdapterType {
     Ollama,
     #[serde(alias = "openai", alias = "OpenAI")]
     OpenAI,
+    #[serde(alias = "test", alias = "Test")]
+    Test,
 }
 
 #[derive(Debug, Clone, FromRow, ToSchema, Serialize, Deserialize, PartialEq)]

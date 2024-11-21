@@ -10,6 +10,7 @@ pub enum AgentVariant {
     Proxy(ProxyAgent),
     Reply(ReplyAgent),
     Tap(TapAgent),
+    Test(TestAgent),
 }
 
 #[allow(unused)]
@@ -33,6 +34,8 @@ pub struct TapAgent {
     pub prompt: String,
     pub args: serde_json::Value,
 }
+
+pub struct TestAgent;
 
 impl Agent for ProxyAgent {
     async fn process(&self, msg: &str, _ctx: &AgentContext) -> Result<AgentDecision, AgentError> {
@@ -60,12 +63,19 @@ impl Agent for TapAgent {
     }
 }
 
+impl Agent for TestAgent {
+    async fn process(&self, _msg: &str, _ctx: &AgentContext) -> Result<AgentDecision, AgentError> {
+        Ok(AgentDecision::None)
+    }
+}
+
 impl Agent for AgentVariant {
     async fn process(&self, msg: &str, ctx: &AgentContext) -> Result<AgentDecision, AgentError> {
         match self {
             AgentVariant::Proxy(agent) => agent.process(msg, ctx).await,
             AgentVariant::Reply(agent) => agent.process(msg, ctx).await,
             AgentVariant::Tap(agent) => agent.process(msg, ctx).await,
+            AgentVariant::Test(agent) => agent.process(msg, ctx).await,
         }
     }
 }
@@ -77,6 +87,7 @@ impl From<ChatAgent> for AgentVariant {
                 let api_key = env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY is not set");
                 OpenaiAdapter::new(api_key, agent.model).into()
             }
+            AdapterType::Test => return AgentVariant::Test(TestAgent),
         };
         match agent.r#type {
             AgentType::Reply => AgentVariant::Reply(ReplyAgent {
@@ -127,7 +138,6 @@ mod tests {
     use anyhow::Result;
     use chrono::Utc;
 
-    #[ignore]
     #[tokio::test]
     async fn agent_variant_should_work() -> Result<()> {
         let (_tdb, state) = AppState::new_for_test()
@@ -139,7 +149,7 @@ mod tests {
         let msg = "test";
         let decision = agent.process(msg, &AgentContext::default()).await?;
         // test if it is modify
-        assert!(matches!(decision, AgentDecision::Modify(_)));
+        assert!(matches!(decision, AgentDecision::None));
         Ok(())
     }
 }

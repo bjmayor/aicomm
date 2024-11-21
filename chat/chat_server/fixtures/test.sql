@@ -45,11 +45,21 @@ INSERT INTO chats(ws_id, type, members)
 VALUES (1, 'single', '{1,2}'),
   (1, 'group', '{1,3,4}');
 -- insert agent to chat
-INSERT INTO chat_agents(chat_id, name, type, prompt, args)
+INSERT INTO chat_agents(
+    chat_id,
+    name,
+    type,
+    adapter,
+    model,
+    prompt,
+    args
+  )
 VALUES (
     1,
     'translation',
     'proxy',
+    'test',
+    'llama3.2',
     'If language is Chinese, translate to English, if language is English, translate to Chinese. Please reply with the translated content directly. No explanation is needed. Here is the content',
     '{}'
   );
