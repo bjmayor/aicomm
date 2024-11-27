@@ -5,6 +5,27 @@ import { getUrlBase } from "../utils";
 import { initSSE } from "../utils";
 import { formatMessageDate } from "../utils"; // Add this import
 
+// 添加 axios 拦截器
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 403) {
+      // 清除本地存储
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("workspace");
+      localStorage.removeItem("channels");
+      localStorage.removeItem("messages");
+      localStorage.removeItem("users");
+      localStorage.removeItem("activeChannelId"); // 添加清除 activeChannelId
+
+      // 跳转到登录页
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default createStore({
   state: {
     user: null, // User information
@@ -36,6 +57,11 @@ export default createStore({
       state.users = users;
     },
     setMessages(state, { channelId, messages }) {
+      // if no channelId, then clear all messages
+      if (!channelId) {
+        state.messages = {};
+        return;
+      }
       // Format the date for each message before setting them in the state
       const formattedMessages = messages.map((message) => ({
         ...message,
@@ -60,6 +86,8 @@ export default createStore({
     setActiveChannel(state, channelId) {
       const channel = state.channels.find((c) => c.id === channelId);
       state.activeChannel = channel;
+      // 保存当前选中的 channel 到 localStorage
+      localStorage.setItem("activeChannelId", channelId);
     },
     loadUserState(state) {
       const storedUser = localStorage.getItem("user");
@@ -69,6 +97,7 @@ export default createStore({
       // we do not store messages in local storage, so this is always empty
       const storedMessages = localStorage.getItem("messages");
       const storedUsers = localStorage.getItem("users");
+      const storedActiveChannelId = localStorage.getItem("activeChannelId");
 
       if (storedUser) {
         state.user = JSON.parse(storedUser);
@@ -81,6 +110,20 @@ export default createStore({
       }
       if (storedChannels) {
         state.channels = JSON.parse(storedChannels);
+        // 如果有保存的 activeChannelId，则设置为当前 channel
+        // 否则默认选择第一个 channel
+        if (storedActiveChannelId && state.channels.length > 0) {
+          const channel = state.channels.find(c => c.id === storedActiveChannelId);
+          if (channel) {
+            state.activeChannel = channel;
+          } else {
+            state.activeChannel = state.channels[0];
+            localStorage.setItem("activeChannelId", state.channels[0].id);
+          }
+        } else if (state.channels.length > 0) {
+          state.activeChannel = state.channels[0];
+          localStorage.setItem("activeChannelId", state.channels[0].id);
+        }
       }
       if (storedMessages) {
         state.messages = JSON.parse(storedMessages);
@@ -142,6 +185,7 @@ export default createStore({
       localStorage.removeItem("workspace");
       localStorage.removeItem("channels");
       localStorage.removeItem("messages");
+      localStorage.removeItem("activeChannelId"); // 添加清除 activeChannelId
 
       commit("setUser", null);
       commit("setToken", null);
@@ -320,6 +364,21 @@ async function loadState(response, self, commit) {
     localStorage.setItem("workspace", JSON.stringify(workspace));
     localStorage.setItem("users", JSON.stringify(usersMap));
     localStorage.setItem("channels", JSON.stringify(channels));
+
+    // 设置默认的 activeChannel
+    if (channels.length > 0) {
+      const storedActiveChannelId = localStorage.getItem("activeChannelId");
+      if (storedActiveChannelId) {
+        const channel = channels.find(c => c.id === storedActiveChannelId);
+        if (channel) {
+          commit("setActiveChannel", channel.id);
+        } else {
+          commit("setActiveChannel", channels[0].id);
+        }
+      } else {
+        commit("setActiveChannel", channels[0].id);
+      }
+    }
 
     // Commit the mutations to update the state
     commit("setUser", user);

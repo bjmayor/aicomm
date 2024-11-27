@@ -32,6 +32,7 @@ impl DecodingKey {
         let opts = VerificationOptions {
             allowed_issuers: Some(HashSet::from_strings(&[JWT_ISS])),
             allowed_audiences: Some(HashSet::from_strings(&[JWT_AUD])),
+            // time_tolerance: Some(Duration::from_secs(10)),
             ..Default::default()
         };
 
