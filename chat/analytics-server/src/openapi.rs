@@ -1,4 +1,4 @@
-use crate::{AppState, ErrorOutput};
+use crate::{handlers::*, AppState, ErrorOutput};
 use axum::Router;
 use utoipa::{
     openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme},
@@ -15,7 +15,7 @@ pub(crate) trait OpenApiRouter {
 #[derive(OpenApi)]
 #[openapi(
         paths(
-
+            create_event_handler
         ),
         components(
             schemas( ErrorOutput),

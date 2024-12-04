@@ -21,6 +21,9 @@ pub enum AppError {
     #[error("missing event data")]
     MissingEventData,
 
+    #[error("missing system info")]
+    MissingSystemInfo,
+
     #[error("general error: {0}")]
     AnyError(#[from] anyhow::Error),
 }
@@ -38,6 +41,7 @@ impl IntoResponse for AppError {
         let status = match &self {
             Self::MissingEventContext => StatusCode::BAD_REQUEST,
             Self::MissingEventData => StatusCode::BAD_REQUEST,
+            Self::MissingSystemInfo => StatusCode::BAD_REQUEST,
             Self::ClickhouseError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::AnyError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };

@@ -9,15 +9,16 @@ use chat_core::{
     DecodingKey, User,
 };
 use clickhouse::Client;
-use config::AppConfig;
+pub use config::AppConfig;
 
 pub mod config;
+pub use events::*;
 mod error;
-mod handler;
+mod handlers;
 mod openapi;
 pub mod pb;
 pub use error::*;
-use handler::create_event_handler;
+use handlers::create_event_handler;
 use openapi::OpenApiRouter;
 use tokio::fs;
 use tower_http::cors::{self, CorsLayer};
@@ -79,15 +80,27 @@ impl AppState {
             .await
             .context("create base_dir failed")?;
         let dk = DecodingKey::load(&config.auth.pk).context("load pk failed")?;
-        let mut client = Client::default()
-            .with_url(&config.server.db_url)
-            .with_database(&config.server.db_name);
+
+        // 先创建一个没有指定数据库的客户端
+        let mut client = Client::default().with_url(&config.server.db_url);
+
         if let Some(user) = config.server.db_user.as_ref() {
             client = client.with_user(user);
         }
         if let Some(password) = config.server.db_password.as_ref() {
             client = client.with_password(password);
         }
+
+        // 创建数据库
+        client
+            .query("CREATE DATABASE IF NOT EXISTS analytics")
+            .execute()
+            .await
+            .context("create database failed")?;
+
+        // 然后设置数据库名
+        client = client.with_database(&config.server.db_name);
+
         Ok(Self {
             inner: Arc::new(AppStateInner { config, dk, client }),
         })
