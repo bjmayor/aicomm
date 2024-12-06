@@ -3,6 +3,7 @@ use axum::response::Json;
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use tracing::warn;
 use utoipa::ToSchema;
 
 #[derive(Debug, ToSchema, Serialize, Deserialize)]
@@ -45,6 +46,7 @@ impl IntoResponse for AppError {
             Self::ClickhouseError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::AnyError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
+        warn!("status: {}, error: {}", status, self.to_string());
 
         (status, Json(ErrorOutput::new(self.to_string()))).into_response()
     }
