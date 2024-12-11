@@ -1,6 +1,6 @@
 [package]
 name = "swiftide-pgvector"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [dependencies]
@@ -15,7 +15,16 @@ tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 
 [dev-dependencies]
-sqlx = { version = "0.8.2", features = ["postgres", "runtime-tokio", "tls-rustls"] }
-swiftide = { version = "0.14.2", features = ["fastembed", "ollama", "tree-sitter"] }
-tokio = { version = "1.41.1", features = ["rt", "net", "rt-multi-thread", "macros"] }
+sqlx = { version = "0.8.2", features = [
+	"postgres",
+	"runtime-tokio",
+	"tls-rustls",
+] }
+swiftide = { version = "0.14.2", features = ["openai", "tree-sitter"] }
+tokio = { version = "1.41.1", features = [
+	"rt",
+	"net",
+	"rt-multi-thread",
+	"macros",
+] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }

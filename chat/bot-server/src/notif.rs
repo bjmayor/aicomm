@@ -51,10 +51,14 @@ pub async fn setup_pg_listener(config: &AppConfig) -> anyhow::Result<()> {
     info!("Listening to chat_message_created");
 
     let pool = PgPoolOptions::new().connect(db_url).await?;
-    let fastembed = integrations::fastembed::FastEmbed::try_default()?;
-    let client = integrations::ollama::Ollama::default()
-        .with_default_prompt_model("llama3.2")
-        .to_owned();
+    // let fastembed = integrations::fastembed::FastEmbed::try_default()?;
+    // let client = integrations::ollama::Ollama::default()
+    //     .with_default_prompt_model("llama3.2")
+    //     .to_owned();
+    let client = integrations::openai::OpenAI::builder()
+        .default_embed_model("text-embedding-3-small")
+        .default_prompt_model("gpt-4o-mini")
+        .build()?;
 
     let mut stream = listener.into_stream();
 
@@ -65,9 +69,8 @@ pub async fn setup_pg_listener(config: &AppConfig) -> anyhow::Result<()> {
         if let Some(notification) = Notification::load(notif.channel(), notif.payload(), &bots) {
             let pool = pool_clone.clone();
             let client = client.clone();
-            let fastembed = fastembed.clone();
             tokio::spawn(async move {
-                if let Err(e) = notification.process(&pool, client, fastembed).await {
+                if let Err(e) = notification.process(&pool, client.clone(), client).await {
                     tracing::error!("Failed to process notification: {:?}", e);
                 }
             });
@@ -105,14 +108,14 @@ impl Notification {
         &self,
         pool: &PgPool,
         client: impl SimplePrompt + Clone + 'static,
-        fastembed: impl EmbeddingModel + Clone + 'static,
+        embed: impl EmbeddingModel + Clone + 'static,
     ) -> anyhow::Result<()> {
         let store = PgVector::try_new(pool.clone(), VECTOR_SIZE as _).await?;
         let pipeline = query::Pipeline::default()
             .then_transform_query(query_transformers::GenerateSubquestions::from_client(
                 client.clone(),
             ))
-            .then_transform_query(query_transformers::Embed::from_client(fastembed))
+            .then_transform_query(query_transformers::Embed::from_client(embed.clone()))
             .then_retrieve(store)
             .then_transform_response(response_transformers::Summary::from_client(client.clone()))
             .then_answer(answers::Simple::from_client(client));

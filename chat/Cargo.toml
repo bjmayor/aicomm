@@ -1,5 +1,13 @@
 [workspace]
-members = ["chat_server", "chat_core", "notify_server", "chat_test", "ai_sdk", "bot-server", "analytics-server"]
+members = [
+  "chat_server",
+  "chat_core",
+  "notify_server",
+  "chat_test",
+  "ai_sdk",
+  "bot-server",
+  "analytics-server",
+]
 resolver = "2"
 
 [workspace.dependencies]
@@ -15,7 +23,7 @@ chrono = { version = "0.4.38", features = ["serde"] }
 chat-core = { path = "./chat_core" }
 chat-server = { path = "./chat_server" }
 notify-server = { path = "./notify_server" }
-swiftide-pgvector = { path = "../swiftide-pgvector" }
+swiftide-pgvector = "0.1.1"
 serde = { version = "1.0.214", features = ["derive"] }
 serde_json = { version = "1.0.132" }
 serde_yaml = "0.9.34"
@@ -37,3 +45,9 @@ tower-http = { version = "0.6.1", features = [
 ] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+reqwest = { version = "0.12.9", default-features = false, features = [
+  "rustls-tls",
+  "json",
+  "multipart",
+  "stream",
+] }

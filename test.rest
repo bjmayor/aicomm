@@ -134,7 +134,7 @@ GET http://localhost:6688/api/files/1/339/807/e635afbeab088ce33206fdf4223a6bb156
 
 ### send a message
 
-POST http://localhost:6688/api/chats/1
+POST http://localhost:6688/api/chats/5
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
